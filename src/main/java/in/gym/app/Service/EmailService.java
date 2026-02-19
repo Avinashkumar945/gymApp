@@ -18,6 +18,9 @@ public class EmailService {
     public void sendOtp(String toEmail, String otp) {
 
         try {
+            System.out.println("Sending OTP to: " + toEmail);
+            System.out.println("API KEY: " + apiKey);
+
             URL url = new URL("https://api.resend.com/emails");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
@@ -28,7 +31,7 @@ public class EmailService {
 
             String jsonInputString = String.format("""
                 {
-                  "from": "onboarding@resend.dev",
+                  "from": "Gym App <onboarding@resend.dev>",
                   "to": "%s",
                   "subject": "Gym App Email Verification",
                   "html": "<strong>Your OTP is: %s</strong>"
@@ -39,7 +42,10 @@ public class EmailService {
                 os.write(jsonInputString.getBytes());
             }
 
-            conn.getResponseCode();
+            int responseCode = conn.getResponseCode();
+            System.out.println("Resend Response Code: " + responseCode);
+
+            conn.disconnect();
 
         } catch (Exception e) {
             e.printStackTrace();
