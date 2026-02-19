@@ -1,53 +1,35 @@
 package in.gym.app.Service;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 @Service
 @Transactional
 public class EmailService {
 
-    @Value("${RESEND_API_KEY}")
-    private String apiKey;
+    @Autowired
+    private JavaMailSender mailSender;
 
     public void sendOtp(String toEmail, String otp) {
 
         try {
             System.out.println("Sending OTP to: " + toEmail);
-            System.out.println("API KEY: " + apiKey);
 
-            URL url = new URL("https://api.resend.com/emails");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("ourgymapp2026@gmail.com"); // must be verified in Brevo
+            message.setTo(toEmail);
+            message.setSubject("Gym App Email Verification");
+            message.setText("Your OTP is: " + otp);
 
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Authorization", "Bearer " + apiKey);
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setDoOutput(true);
+            mailSender.send(message);
 
-            String jsonInputString = String.format("""
-                {
-                  "from": "Gym App <onboarding@resend.dev>",
-                  "to": "%s",
-                  "subject": "Gym App Email Verification",
-                  "html": "<strong>Your OTP is: %s</strong>"
-                }
-                """, toEmail, otp);
-
-            try (OutputStream os = conn.getOutputStream()) {
-                os.write(jsonInputString.getBytes());
-            }
-
-            int responseCode = conn.getResponseCode();
-            System.out.println("Resend Response Code: " + responseCode);
-
-            conn.disconnect();
+            System.out.println("OTP sent successfully via Brevo SMTP");
 
         } catch (Exception e) {
+            System.out.println("Error sending email:");
             e.printStackTrace();
         }
     }
